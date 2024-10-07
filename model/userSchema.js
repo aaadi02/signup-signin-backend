@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const {Schema} = mongoose;
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcrypt');
 
 const userSchema = new Schema({
   name: {
@@ -30,7 +31,16 @@ const userSchema = new Schema({
   timestamps: true,
 })
 
-userSchema.method = {
+userSchema.pre('save', async function () {
+  if(!this.isModified('password')) {
+    return next();
+  }
+
+  this.password = await bcrypt.hash(this.password, 10);
+  return next();
+})
+
+userSchema.methods = {
   jwtToken () {
     return jwt.sign(
       {id: this._id, email: this.email},
